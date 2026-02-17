@@ -1,15 +1,7 @@
 ---
-title: "session04 - homework - solutions"
+title: "TORRUELLA_04_homework"
 format: html
 editor: visual
-date: 2025-07-17
-author: Timo Roettger
-execute:
-  error: false
-  warning: false
-  message: false
-  cache: false
-bibliography: ../../resources/bibliography.bib
 ---
 
 # Preamble: Loading packages and configuration

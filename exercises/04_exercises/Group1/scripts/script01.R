@@ -38,6 +38,7 @@ data_trimmed <- data |>
   group_by(vp_id, var_001) |> 
   mutate(avg = mean(var_007), stdev = sd(var_007)) |> 
   filter(var_007 <= 2 * stdev + avg) |> 
+  filter(vp_002 <= 30) |>
   as.data.frame()
 
 ###########
