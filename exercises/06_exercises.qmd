@@ -35,11 +35,7 @@ run_if_not_knitting(current_working_dir <- dirname(rstudioapi::getActiveDocument
 #run_if_not_knitting(setwd(current_working_dir))
 
 # options to increase efficiency of brms models (optional)
-<<<<<<< HEAD
-# options(brms.backend = "cmdstanr")
-=======
 #options(brms.backend = "cmdstanr")
->>>>>>> 7e03655f421353a8a8f98d4804878c31d401ece3
 options(mc.cores = parallel::detectCores())
 
 ```
