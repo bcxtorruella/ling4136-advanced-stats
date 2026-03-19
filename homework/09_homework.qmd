@@ -69,7 +69,7 @@ Variables:
 
 `Designation`: source of Pokemon name. Official = the official names of Japanese Pokemon; Elicited = elicited names from naive participants.
 
-`pokemonname`: Pokemon name in Japanese
+(`pokemonname`: Pokemon name in Japanese) removed in simplified data file
 
 `Output`: Pokemon name in transcribed form
 
