@@ -55,7 +55,7 @@ Let's have a look at the data:
 #| label: data
 
 # Load in the dataset and already remove irrelevant stuff:
-pokemon <- read_csv('../data/Japanese_Pokemon_simplified.csv') |> 
+pokemon <- read_csv('../../data/Japanese_Pokemon.csv') |> 
   select(-`Sum of values`, -Checksum)
 
 # check data set:
@@ -95,13 +95,111 @@ Now imagine researchers want to use this data set to *test* the following hypoth
 
 Take the hypothesis and what you know about the data set and its structure to predict a very specific relationship that you can test. You are allowed to look at the dataset, but do not look at concrete relationships that might be a manifestation of the hypothesis.
 
+```{r}
+# I predict that pokemon that are further along in their evolution will have longer names. 2 is longer than N/A is longer than 1.
+pacman::p_load(rstudioapi, tidyverse, tidybayes, brms, bayesplot, bayestestR, modelr)
+
+main_formula <- bf(Length ~ Evolution) # the semantic content predicts the form
+
+get_prior(main_formula, pokemon) # priors are b_Evolution and Intercept
+
+# mean length for all names is ~7.7
+mean(pokemon$Length)
+
+# there are 785 1s, 270 NAs, and 810 2s 
+table(pokemon$Evolution)
+colSums(is.na(pokemon))[5]
+
+# naive priors
+my_priors <- c(
+  prior(normal(7.7, 4), class = 'Intercept'),
+  prior(normal(2, 4), class = 'b')
+)
+
+
+```
+
 ## B: Run your preregistered analysis
 
 Run the preregistered analysis made in (A) above and interpret your results relative to the hypothesis.
 
+```{r}
+
+# we'll do a linear model why not?
+model <- lm(main_formula, data = pokemon)
+coef(model)
+# Intercept is 5.7, Evolution is 1.3. Tiny p values (< 2.2e-16 for everything)
+
+
+
+model_posterior <- brm(main_formula,
+                  family = gaussian(),
+                  prior = my_priors,
+                  data = pokemon,
+                  chains = 4,
+                  cores = 4, 
+                  iter = 2000,
+                  warmup = 1000,
+                  thin = 1,
+                  seed = 42)
+
+model_posterior # ~4000 Bulk_ESS and ~3000 Tail_ESS for all params--looks good
+mcmc_plot(model_posterior, type = 'trace') # good caterpillars
+# Intercept is ~5.7 (5.40-5.99) and Evolution is ~1.28 (1.09-1.46). Good confidence!
+
+# It's settled: more evolved pokemon have longer names. And we did it with both Bayes and frequentism, so it should pass everyone's peer reviews :)
+```
+
 ## C: Show contradicting results
 
 Now explore the data and find two alternative way to test the research hypothesis that yield convincing results that go in opposite directions based of your findings in (A). Justify all your choices verbally after the fact.
+
+```{r}
+# soo we want to show that shorter = more evolved
+
+# maybe the final form is more likely to end in /n/ (written as [X] here)
+#pokemon_n <- 
+#  pokemon %>% mutate(nasal_end = endsWith(Output, 'X'))
+
+
+# maybe we think, no no no, LENGTH should be the predictor, and evolution should be the DV, since it is probably maybe the length of a proposed name that affects which level of evolution the pokemon designers feel like it should be assigned to. 
+# That means we are predicting a categorical variable with a continuous variable. I'm not sure if we learned how to do that with Bayes...I'll just use a glm. 
+
+# We will have to recode 1, 2, NA to a 0-1 scale
+pokemon_new_evo <- pokemon %>% 
+  mutate(
+    new_evo = case_when(
+      Evolution == 1 ~ 0,
+      Evolution == 2 ~ 1,
+      Evolution == NA ~ 0.5 # This includes both single-stage and mid-stage pokemon
+    )
+  )
+contrarian_formula_1 <- bf(new_evo ~ Length)
+model_converse <- glm(contrarian_formula_1, 
+                      data = pokemon_new_evo, 
+                      family = binomial)
+# Intercept is -2.7
+
+newdata <- data.frame(Length = seq(1, 20, length.out = 30))
+preds <- predict(model_converse, newdata = newdata, type = "response", se.fit = TRUE)
+newdata$pred_evo <- preds$fit
+ggplot(newdata, aes(x = Length, y = pred_evo)) + geom_point()
+
+
+# And then maybe some other researchers come along and say, "Oh you silly geese, your analysis doesn't include NAs properly! We need to recode everything."
+
+contrarian_formula_1 = bf(Length ~ Evolution + X + (1 + Evolution | Designation) )
+linear_model_n <- lmer(contrarian_formula_1, data = pokemon)
+coef(linear_model_n)
+
+# maybe we need some more random effects.
+
+# maybe they end in a vowel?
+
+
+# And then maybe some other researchers come by and say "Folks I love what you did with the recoding of the evolutionary scale. But GLMs have p-values and Timo told me not to touch that. If it's not Bayes, there's no ways I use it. We'll replicate your analysis with Bayesian methods--but we also think that we need to account for which sound the name ends with.
+
+```
 
 ## D: Researcher degrees of freedom
 
