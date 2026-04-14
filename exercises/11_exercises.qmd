@@ -238,7 +238,12 @@ Define and justify a different smallest effect sizes of interest for this study.
 ```{r}
 #| label: rope-2
 
-rope_2 <- c(#YOUR ROPE HERE)
+# 1mm measurement error
+# ~2mm coder SD
+# 3mm approximate X size
+# 1mm width of writing instrument
+# question we will never know the answer to: was it an edge-start or a tick-start ruler
+rope_2 <- c(-7,7)
 
 ```
 
@@ -249,8 +254,12 @@ Calculate the Bayes factor as above and interpret your results for this new ROPE
 ```{r}
 #| label: BF-2
 
-#YOUR CODE HERE
+BF_brandon <- 
+  bayesfactor_rope(posterior = xmdl,
+                   null = rope_2,
+                   parameter = "b_SemSimilar")  # 0.431
 
+BF_brandon
 ```
 
 ## (c) Check the robustness of this value for different priors
@@ -259,8 +268,16 @@ Run two more models with different priors and explore how the Bayes Factor chang
 
 ```{r}
 
-#YOUR ANSWER HERE
+# calculate BF for the model with a much narrower prior
+bayesfactor_rope(posterior = xmdl_25,
+                   null = rope_2,
+                   seed = 234,
+                   parameter = "b_SemSimilar")  # 0.9
 
+# calculate BF for the model with a much wider prior
+bayesfactor_rope(posterior = xmdl_100,
+                   null = rope_2,
+                   parameter = "b_SemSimilar")  # 0.208
 ```
 
 # References
